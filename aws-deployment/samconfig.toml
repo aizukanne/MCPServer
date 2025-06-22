@@ -1,0 +1,80 @@
+# SAM Configuration for MCP Office Assistant
+
+version = 0.1
+
+[default]
+[default.global]
+[default.global.parameters]
+stack_name = "mcp-office-assistant-dev"
+s3_prefix = "mcp-office-assistant"
+region = "us-west-2"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+confirm_changeset = true
+resolve_s3 = true
+disable_rollback = false
+
+[default.build]
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy]
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+confirm_changeset = true
+resolve_s3 = true
+disable_rollback = false
+fail_on_empty_changeset = false
+
+[default.package]
+[default.package.parameters]
+resolve_s3 = true
+
+[default.sync]
+[default.sync.parameters]
+watch = true
+
+[default.local_start_api]
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[default.local_start_lambda]
+[default.local_start_lambda.parameters]
+warm_containers = "EAGER"
+
+# Environment-specific configurations
+[dev]
+[dev.global]
+[dev.global.parameters]
+stack_name = "mcp-office-assistant-dev"
+
+[dev.deploy]
+[dev.deploy.parameters]
+parameter_overrides = [
+    "Environment=dev",
+    "ProjectName=mcp-office-assistant"
+]
+
+[staging] 
+[staging.global]
+[staging.global.parameters]
+stack_name = "mcp-office-assistant-staging"
+
+[staging.deploy]
+[staging.deploy.parameters]
+parameter_overrides = [
+    "Environment=staging",
+    "ProjectName=mcp-office-assistant"
+]
+
+[prod]
+[prod.global]
+[prod.global.parameters]
+stack_name = "mcp-office-assistant-prod"
+
+[prod.deploy]
+[prod.deploy.parameters]
+parameter_overrides = [
+    "Environment=prod", 
+    "ProjectName=mcp-office-assistant"
+]

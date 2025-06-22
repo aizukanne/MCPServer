@@ -1,0 +1,34 @@
+[
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "ProjectName",
+    "ParameterValue": "mcp-office-assistant"
+  },
+  {
+    "ParameterKey": "AllowedOrigins",
+    "ParameterValue": "*"
+  },
+  {
+    "ParameterKey": "OpenAIApiKey",
+    "ParameterValue": "REPLACE_WITH_YOUR_OPENAI_API_KEY"
+  },
+  {
+    "ParameterKey": "SlackBotToken",
+    "ParameterValue": "REPLACE_WITH_YOUR_SLACK_BOT_TOKEN"
+  },
+  {
+    "ParameterKey": "OpenWeatherApiKey",
+    "ParameterValue": "REPLACE_WITH_YOUR_OPENWEATHER_API_KEY"
+  },
+  {
+    "ParameterKey": "GoogleSearchApiKey",
+    "ParameterValue": "REPLACE_WITH_YOUR_GOOGLE_SEARCH_API_KEY"
+  },
+  {
+    "ParameterKey": "GoogleSearchEngineId",
+    "ParameterValue": "REPLACE_WITH_YOUR_SEARCH_ENGINE_ID"
+  }
+]

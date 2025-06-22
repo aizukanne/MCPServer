@@ -1,0 +1,74 @@
+# MCP Office Assistant - Git Ignore
+# =================================
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# AWS
+.aws-sam/
+samconfig.toml.backup
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# API Keys and Secrets (extra safety)
+**/parameters-*.json.backup
+**/*key*
+**/*secret*
+**/*token*
+
+# Lambda layers (these get rebuilt)
+aws-deployment/layers/dependencies/python/
+
+# Artifacts directory (if used)
+artifacts/

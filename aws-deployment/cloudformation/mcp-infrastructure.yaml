@@ -1,0 +1,425 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'MCP Office Assistant - Serverless Infrastructure'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment
+  
+  ProjectName:
+    Type: String
+    Default: mcp-office-assistant
+    Description: Project name for resource naming
+  
+  AllowedOrigins:
+    Type: CommaDelimitedList
+    Default: "*"
+    Description: CORS allowed origins for API Gateway
+  
+  OpenAIApiKey:
+    Type: String
+    NoEcho: true
+    Description: OpenAI API Key
+  
+  SlackBotToken:
+    Type: String
+    NoEcho: true
+    Description: Slack Bot Token
+  
+  OpenWeatherApiKey:
+    Type: String
+    NoEcho: true
+    Description: OpenWeather API Key
+  
+  GoogleSearchApiKey:
+    Type: String
+    NoEcho: true
+    Description: Google Custom Search API Key
+  
+  GoogleSearchEngineId:
+    Type: String
+    Description: Google Custom Search Engine ID
+
+Globals:
+  Function:
+    Runtime: python3.9
+    Timeout: 300
+    MemorySize: 512
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+        PROJECT_NAME: !Ref ProjectName
+        DOCS_BUCKET: !Ref DocumentsBucket
+        NAMES_TABLE: !Ref UsersTable
+        CHANNELS_TABLE: !Ref ChannelsTable
+        OPENAI_API_KEY: !Ref OpenAIApiKey
+        SLACK_BOT_TOKEN: !Ref SlackBotToken
+        OPENWEATHER_KEY: !Ref OpenWeatherApiKey
+        CUSTOM_SEARCH_API_KEY: !Ref GoogleSearchApiKey
+        CUSTOM_SEARCH_ID: !Ref GoogleSearchEngineId
+    Layers:
+      - !Ref DependenciesLayer
+
+Resources:
+  # API Gateway
+  MCPApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${ProjectName}-${Environment}-api"
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'*'"
+        AllowOrigin: !Sub 
+          - "'${inner}'"
+          - inner: !Join ["','", !Ref AllowedOrigins]
+      Auth:
+        ApiKeyRequired: true
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          Description: Usage plan for MCP API
+          Quota:
+            Limit: 10000
+            Period: MONTH
+          Throttle:
+            BurstLimit: 100
+            RateLimit: 50
+      DefinitionBody:
+        swagger: '2.0'
+        info:
+          title: MCP Office Assistant API
+          version: '1.0'
+        securityDefinitions:
+          ApiKeyAuth:
+            type: apiKey
+            in: header
+            name: x-api-key
+        paths:
+          /tools:
+            get:
+              summary: List available tools
+              security:
+                - ApiKeyAuth: []
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ListToolsFunction.Arn}/invocations"
+          /tools/{tool_name}:
+            post:
+              summary: Execute a tool
+              security:
+                - ApiKeyAuth: []
+              parameters:
+                - name: tool_name
+                  in: path
+                  required: true
+                  type: string
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ToolExecutorFunction.Arn}/invocations"
+
+  # Lambda Layer for Dependencies
+  DependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "${ProjectName}-${Environment}-dependencies"
+      Description: Dependencies for MCP functions
+      ContentUri: layers/dependencies/
+      CompatibleRuntimes:
+        - python3.9
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.9
+
+  # Core Lambda Functions
+  ListToolsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}-${Environment}-list-tools"
+      CodeUri: src/
+      Handler: lambda_handlers.list_tools_handler
+      Description: List all available MCP tools
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MCPApi
+            Path: /tools
+            Method: GET
+
+  ToolExecutorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}-${Environment}-tool-executor"
+      CodeUri: src/
+      Handler: lambda_handlers.tool_executor_handler
+      Description: Execute MCP tools
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChannelsTable
+        - S3CrudPolicy:
+            BucketName: !Ref DocumentsBucket
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+                - ssm:GetParameters
+                - ssm:GetParametersByPath
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/*"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MCPApi
+            Path: /tools/{tool_name}
+            Method: POST
+
+  # Specialized Lambda Functions for Heavy Operations
+  WebBrowsingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}-${Environment}-web-browsing"
+      CodeUri: src/
+      Handler: specialized_handlers.web_browsing_handler
+      Description: Handle web browsing and search operations
+      Timeout: 900  # 15 minutes for web scraping
+      MemorySize: 1024
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref DocumentsBucket
+
+  DocumentProcessingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}-${Environment}-document-processing"
+      CodeUri: src/
+      Handler: specialized_handlers.document_processing_handler
+      Description: Handle document processing and PDF generation
+      Timeout: 600  # 10 minutes
+      MemorySize: 1024
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref DocumentsBucket
+
+  # Storage Resources
+  DocumentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-${Environment}-documents-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 30
+          - Id: DeleteIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${ProjectName}-${Environment}-users"
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  ChannelsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${ProjectName}-${Environment}-channels"
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  # Parameter Store for Configuration
+  OpenAIKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/${Environment}/openai-api-key"
+      Type: SecureString
+      Value: !Ref OpenAIApiKey
+      Description: OpenAI API Key
+
+  SlackTokenParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/${Environment}/slack-bot-token"
+      Type: SecureString
+      Value: !Ref SlackBotToken
+      Description: Slack Bot Token
+
+  # CloudWatch Log Groups
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/apigateway/${ProjectName}-${Environment}"
+      RetentionInDays: 14
+
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ProjectName}-${Environment}"
+      RetentionInDays: 14
+
+  # IAM Role for Cross-Function Communication
+  MCPExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-${Environment}-execution-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: MCPResourceAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt UsersTable.Arn
+                  - !GetAtt ChannelsTable.Arn
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "${DocumentsBucket}/*"
+                  - !GetAtt DocumentsBucket.Arn
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-${Environment}-*"
+
+  # API Keys for Different Projects
+  ProjectAApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub "${ProjectName}-${Environment}-project-a"
+      Description: API Key for Project A
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref MCPApi
+          StageName: !Ref Environment
+
+  ProjectBApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub "${ProjectName}-${Environment}-project-b"
+      Description: API Key for Project B
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref MCPApi
+          StageName: !Ref Environment
+
+  # Usage Plans
+  DefaultUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: !Sub "${ProjectName}-${Environment}-default"
+      Description: Default usage plan for MCP API
+      ApiStages:
+        - ApiId: !Ref MCPApi
+          Stage: !Ref Environment
+      Quota:
+        Limit: 10000
+        Period: MONTH
+      Throttle:
+        BurstLimit: 100
+        RateLimit: 50
+
+  ProjectAUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ProjectAApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref DefaultUsagePlan
+
+  ProjectBUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ProjectBApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref DefaultUsagePlan
+
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${MCPApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+    Export:
+      Name: !Sub "${ProjectName}-${Environment}-api-url"
+
+  ProjectAApiKey:
+    Description: API Key for Project A
+    Value: !Ref ProjectAApiKey
+    Export:
+      Name: !Sub "${ProjectName}-${Environment}-project-a-key"
+
+  ProjectBApiKey:
+    Description: API Key for Project B
+    Value: !Ref ProjectBApiKey
+    Export:
+      Name: !Sub "${ProjectName}-${Environment}-project-b-key"
+
+  DocumentsBucket:
+    Description: S3 bucket for documents
+    Value: !Ref DocumentsBucket
+    Export:
+      Name: !Sub "${ProjectName}-${Environment}-docs-bucket"
+
+  UsersTable:
+    Description: DynamoDB table for users
+    Value: !Ref UsersTable
+    Export:
+      Name: !Sub "${ProjectName}-${Environment}-users-table"
+
+  ChannelsTable:
+    Description: DynamoDB table for channels
+    Value: !Ref ChannelsTable
+    Export:
+      Name: !Sub "${ProjectName}-${Environment}-channels-table"
