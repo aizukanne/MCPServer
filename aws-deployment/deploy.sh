@@ -108,12 +108,18 @@ aiohttp>=3.8.0
 beautifulsoup4>=4.11.0
 weaviate-client>=3.15.0
 openai>=1.0.0
-fpdf>=2.5.0
+fpdf==1.7.2
 markdown2>=2.4.0
 pydantic>=2.0.0
 nltk>=3.8.0
 lxml>=4.9.0
 python-dotenv>=1.0.0
+slack-sdk>=3.19.0
+semantic-router>=0.0.20
+mcp>=0.9.0
+urllib3>=1.26.0
+botocore>=1.29.0
+typing-extensions>=4.0.0
 EOF
 
     # Install dependencies to layer
