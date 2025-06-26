@@ -320,57 +320,18 @@ class OfficeAssistantServer:
         else:
             raise ValueError(f"Unhandled tool: {tool_name}")
     
-    async def run(self) -> None:
-        """Run the MCP server."""
-        logger.info("Starting Office Assistant MCP Server...")
-        
-        # Initialize server options
-        options = InitializationOptions(
-            server_name="office-assistant",
-            server_version="1.0.0",
-            capabilities={
-                "tools": {}
-            }
-        )
-        
-        # The server.run() method expects anyio MemoryObjectStreams
-        # These should be provided by the MCP client (Inspector, Claude Desktop, etc.)
-        # We'll let the error propagate to show the actual issue
-        await self.server.run(
-            read_stream=sys.stdin.buffer,
-            write_stream=sys.stdout.buffer,
-            initialization_options=options
-        )
+    def get_server(self) -> Server:
+        """Get the MCP server instance."""
+        return self.server
 
 
-async def main() -> None:
-    """Main entry point."""
-    try:
-        server = OfficeAssistantServer()
-        await server.run()
-    except KeyboardInterrupt:
-        logger.info("Server stopped by user")
-    except ExceptionGroup as eg:
-        logger.error(f"Server error: {eg}")
-        # Log each sub-exception
-        for i, e in enumerate(eg.exceptions):
-            logger.error(f"Sub-exception {i+1}: {type(e).__name__}: {e}")
-            import traceback
-            logger.error(f"Traceback:\n{traceback.format_exc()}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Server error: {type(e).__name__}: {e}")
-        import traceback
-        logger.error(f"Traceback:\n{traceback.format_exc()}")
-        sys.exit(1)
-    finally:
-        # Clean up Weaviate connection
-        try:
-            from config import close_weaviate_client
-            close_weaviate_client()
-        except Exception as e:
-            logger.warning(f"Error during cleanup: {e}")
-
-
+# This module should be imported and used by an MCP runner
+# It should not be run directly
 if __name__ == "__main__":
-    asyncio.run(main())
+    logger.error("This module should not be run directly!")
+    logger.error("Use one of the MCP server runners instead:")
+    logger.error("  - python index.py")
+    logger.error("  - python mcp_run.py")
+    logger.error("Or run via MCP Inspector:")
+    logger.error("  - npx @modelcontextprotocol/inspector python index.py")
+    sys.exit(1)
