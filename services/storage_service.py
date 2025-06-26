@@ -58,7 +58,7 @@ class StorageService:
     
     def __init__(self):
         """Initialize the storage service."""
-        if not weaviate_client:
+        if not get_or_create_weaviate_client:
             logger.warning("Weaviate client not configured")
         if not names_table or not channels_table:
             logger.warning("DynamoDB tables not configured")
@@ -122,6 +122,7 @@ class StorageService:
         Returns:
             List of messages in the range
         """
+        weaviate_client = get_or_create_weaviate_client()
         if not weaviate_client:
             raise ValueError("Weaviate client not configured")
         

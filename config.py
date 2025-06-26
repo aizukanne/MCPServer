@@ -29,10 +29,11 @@ headers = {
 }
 
 # Odoo configuration
-odoo_url = "http://167.71.140.93:8069"
-odoo_db = "Production"
-odoo_login = "ai_bot"
-odoo_password = "Carbon123#"
+odoo_url = os.getenv('ODOO_URL', "http://167.71.140.93:8069")
+odoo_db = os.getenv('ODOO_DB', "Production")
+odoo_login = os.getenv('ODOO_LOGIN', "ai_bot")
+odoo_password = os.getenv('ODOO_PASSWORD', "Carbon123#")
+base_url = os.getenv('ODOO_BASE_URL')  # Load base_url from environment
 
 # Initialize Slack client
 slack_client = WebClient(token=slack_bot_token)
@@ -93,13 +94,33 @@ openrouter_client = openai.OpenAI(
 
 # Initialize Weaviate client
 def get_weaviate_client():
-    return weaviate.connect_to_weaviate_cloud(
-        cluster_url=weaviate_url,
-        auth_credentials=Auth.api_key(weaviate_api_key),
-        headers=headers
-    )
+    if weaviate_url and weaviate_api_key:
+        return weaviate.connect_to_weaviate_cloud(
+            cluster_url=weaviate_url,
+            auth_credentials=Auth.api_key(weaviate_api_key),
+            headers=headers
+        )
+    return None
 
-weaviate_client = get_weaviate_client()
+# Lazy initialization - only create client when needed
+weaviate_client = None
+
+def get_or_create_weaviate_client():
+    global weaviate_client
+    if weaviate_client is None:
+        weaviate_client = get_weaviate_client()
+    return weaviate_client
+
+# Function to close Weaviate connection
+def close_weaviate_client():
+    global weaviate_client
+    if weaviate_client:
+        try:
+            weaviate_client.close()
+        except Exception as e:
+            logging.warning(f"Error closing Weaviate client: {e}")
+        finally:
+            weaviate_client = None
 
 # Default AI parameters
 ai_temperature = 0.9

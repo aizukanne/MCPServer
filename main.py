@@ -319,8 +319,8 @@ class OfficeAssistantServer:
             }
         )
         
-        async with self.server:
-            await self.server.run()
+        # Run the server directly without context manager
+        await self.server.run()
 
 
 async def main() -> None:
@@ -333,6 +333,13 @@ async def main() -> None:
     except Exception as e:
         logger.error(f"Server error: {e}")
         sys.exit(1)
+    finally:
+        # Clean up Weaviate connection
+        try:
+            from config import close_weaviate_client
+            close_weaviate_client()
+        except Exception as e:
+            logger.warning(f"Error during cleanup: {e}")
 
 
 if __name__ == "__main__":
