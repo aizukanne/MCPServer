@@ -24,11 +24,16 @@ def test_config_import():
         else:
             logger.error("✗ base_url is not defined in config")
             
-        # Check Weaviate client functions
-        if hasattr(config, 'get_or_create_weaviate_client'):
-            logger.info("✓ get_or_create_weaviate_client function exists")
+        # Check Weaviate client and functions
+        if hasattr(config, 'weaviate_client'):
+            logger.info("✓ weaviate_client variable exists")
         else:
-            logger.error("✗ get_or_create_weaviate_client function not found")
+            logger.error("✗ weaviate_client variable not found")
+            
+        if hasattr(config, 'init_weaviate_client'):
+            logger.info("✓ init_weaviate_client function exists")
+        else:
+            logger.error("✗ init_weaviate_client function not found")
             
         if hasattr(config, 'close_weaviate_client'):
             logger.info("✓ close_weaviate_client function exists")
@@ -76,14 +81,19 @@ def test_weaviate_cleanup():
     """Test Weaviate client cleanup."""
     logger.info("\nTesting Weaviate client cleanup...")
     try:
-        from config import get_or_create_weaviate_client, close_weaviate_client
+        from config import weaviate_client, init_weaviate_client, close_weaviate_client
         
-        # Try to get client (it may be None if not configured)
-        client = get_or_create_weaviate_client()
-        if client:
-            logger.info("✓ Weaviate client created")
+        # Check if client exists
+        if weaviate_client:
+            logger.info("✓ Weaviate client exists")
         else:
-            logger.info("✓ Weaviate client not configured (expected if credentials missing)")
+            logger.info("✓ Weaviate client not initialized (expected if credentials missing)")
+            # Try to initialize
+            client = init_weaviate_client()
+            if client:
+                logger.info("✓ Weaviate client initialized successfully")
+            else:
+                logger.info("✓ Weaviate client initialization skipped (no credentials)")
         
         # Test cleanup
         close_weaviate_client()

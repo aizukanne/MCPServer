@@ -1,4 +1,5 @@
 import os
+import logging
 import boto3
 import openai
 import weaviate
@@ -92,31 +93,37 @@ openrouter_client = openai.OpenAI(
     api_key = os.getenv('OPENROUTER_API_KEY')
 )
 
-# Initialize Weaviate client
-def get_weaviate_client():
-    if weaviate_url and weaviate_api_key:
-        return weaviate.connect_to_weaviate_cloud(
-            cluster_url=weaviate_url,
-            auth_credentials=Auth.api_key(weaviate_api_key),
-            headers=headers
-        )
-    return None
-
-# Lazy initialization - only create client when needed
+# Initialize Weaviate client - will be created on first use
 weaviate_client = None
 
-def get_or_create_weaviate_client():
+def init_weaviate_client():
+    """Initialize the Weaviate client if credentials are available."""
     global weaviate_client
-    if weaviate_client is None:
-        weaviate_client = get_weaviate_client()
+    if weaviate_client is None and weaviate_url and weaviate_api_key:
+        try:
+            weaviate_client = weaviate.connect_to_weaviate_cloud(
+                cluster_url=weaviate_url,
+                auth_credentials=Auth.api_key(weaviate_api_key),
+                headers=headers
+            )
+            logging.info("Weaviate client initialized successfully")
+        except Exception as e:
+            logging.error(f"Failed to connect to Weaviate: {e}")
+            weaviate_client = None
     return weaviate_client
+
+# Try to initialize on module load if credentials are available
+if weaviate_url and weaviate_api_key:
+    init_weaviate_client()
 
 # Function to close Weaviate connection
 def close_weaviate_client():
+    """Close the Weaviate client connection if it exists."""
     global weaviate_client
     if weaviate_client:
         try:
             weaviate_client.close()
+            logging.info("Weaviate client closed successfully")
         except Exception as e:
             logging.warning(f"Error closing Weaviate client: {e}")
         finally:
