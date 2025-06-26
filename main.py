@@ -324,6 +324,12 @@ class OfficeAssistantServer:
         """Run the MCP server."""
         logger.info("Starting Office Assistant MCP Server...")
         
+        # Add diagnostic logging
+        logger.info(f"stdin type: {type(sys.stdin)}")
+        logger.info(f"stdin.buffer type: {type(sys.stdin.buffer)}")
+        logger.info(f"stdin isatty: {sys.stdin.isatty()}")
+        logger.info(f"stdin readable: {hasattr(sys.stdin.buffer, 'readable') and sys.stdin.buffer.readable()}")
+        
         # Initialize server options
         options = InitializationOptions(
             server_name="office-assistant",
@@ -334,11 +340,17 @@ class OfficeAssistantServer:
         )
         
         # Run the server with stdio streams
-        await self.server.run(
-            read_stream=sys.stdin.buffer,
-            write_stream=sys.stdout.buffer,
-            initialization_options=options
-        )
+        try:
+            logger.info("Attempting to run MCP server with stdio streams...")
+            await self.server.run(
+                read_stream=sys.stdin.buffer,
+                write_stream=sys.stdout.buffer,
+                initialization_options=options
+            )
+        except Exception as e:
+            logger.error(f"Failed to run server: {type(e).__name__}: {e}")
+            logger.error(f"This typically means the server is being run directly instead of through an MCP client")
+            raise
 
 
 async def main() -> None:
