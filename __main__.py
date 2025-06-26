@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 if __name__ == "__main__":
     # Import and run the MCP stdio server
+    import asyncio
     import mcp.server.stdio
     from main import OfficeAssistantServer
     
@@ -21,4 +22,4 @@ if __name__ == "__main__":
     server = OfficeAssistantServer()
     
     # Run with MCP's stdio handler
-    mcp.server.stdio.run_stdio_server(server.server)
+    asyncio.run(mcp.server.stdio.stdio_server(server.server))

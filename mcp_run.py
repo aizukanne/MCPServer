@@ -13,8 +13,9 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 if __name__ == "__main__":
-    # Import MCP's stdio server runner
-    from mcp.server.stdio import run_stdio_server
+    # Import required modules
+    import asyncio
+    from mcp.server.stdio import stdio_server
     from main import OfficeAssistantServer
     
     # Create server instance
@@ -22,4 +23,4 @@ if __name__ == "__main__":
     
     # Use MCP's built-in stdio server runner
     # This handles all the stream conversion automatically
-    run_stdio_server(server.server)
+    asyncio.run(stdio_server(server.server))
