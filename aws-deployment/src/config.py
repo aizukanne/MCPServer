@@ -61,8 +61,8 @@ USER_AGENTS = [
     "Mozilla/5.0 (iPad; CPU OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Mobile/15E148 Safari/604.1"
 ]
 
-# Initialize AWS services
-dynamodb = boto3.resource('dynamodb')
+# Initialize AWS services - Lambda will use IAM role's region by default
+dynamodb = boto3.resource('dynamodb', region_name=os.getenv('AWS_DEFAULT_REGION', 'us-west-2'))
 
 # Initialize DynamoDB tables
 names_table = dynamodb.Table('slack_usernames')

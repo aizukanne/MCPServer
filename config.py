@@ -5,6 +5,10 @@ import weaviate
 from weaviate.classes.init import Auth
 from semantic_router.encoders import OpenAIEncoder
 from slack_sdk import WebClient
+from dotenv import load_dotenv
+
+# Load .env file for local development
+load_dotenv()
 
 # Initialize API keys from environment variables
 calendar_id = os.getenv('GOOGLE_CALENDAR_ID')
@@ -61,8 +65,8 @@ USER_AGENTS = [
     "Mozilla/5.0 (iPad; CPU OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Mobile/15E148 Safari/604.1"
 ]
 
-# Initialize AWS services
-dynamodb = boto3.resource('dynamodb')
+# Initialize AWS services with region
+dynamodb = boto3.resource('dynamodb', region_name=os.getenv('AWS_DEFAULT_REGION', 'us-west-2'))
 
 # Initialize DynamoDB tables
 names_table = dynamodb.Table('slack_usernames')
