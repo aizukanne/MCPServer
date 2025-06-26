@@ -68,7 +68,6 @@ def main():
         ('boto3', 'boto3>=1.26.0'),
         ('weaviate', 'weaviate-client>=3.15.0'),
         ('slack_sdk', 'slack_sdk (not in requirements.txt)'),
-        ('semantic_router', 'semantic_router (not in requirements.txt)'),
         ('markdown2', 'markdown2>=2.4.0'),
         ('mcp', 'mcp>=0.9.0'),
     ]
@@ -121,10 +120,10 @@ def main():
             print(f"   - {requirement}")
         print("\nTo install missing packages, run:")
         print("   pip install -r requirements.txt")
-        if any(p[0] in ['semantic_router', 'slack_sdk'] for p in missing_packages):
-            print("\n⚠️  Note: semantic_router and slack_sdk are not in requirements.txt")
-            print("   You may need to install them separately:")
-            print("   pip install semantic-router slack-sdk")
+        if any(p[0] == 'slack_sdk' for p in missing_packages):
+            print("\n⚠️  Note: slack_sdk is not in requirements.txt")
+            print("   You may need to install it separately:")
+            print("   pip install slack-sdk")
     
     if not config_success:
         print("\n❌ The config module failed to import, which is causing cascade failures")

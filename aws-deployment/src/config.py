@@ -3,7 +3,6 @@ import boto3
 import openai
 import weaviate
 from weaviate.classes.init import Auth
-from semantic_router.encoders import OpenAIEncoder
 from slack_sdk import WebClient
 
 # Initialize API keys from environment variables
@@ -86,11 +85,6 @@ client = openai.OpenAI(
 openrouter_client = openai.OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key = os.getenv('OPENROUTER_API_KEY')
-)
-
-# Initialize encoder
-encoder = OpenAIEncoder(
-    os.environ.get("OPENAI_API_KEY")
 )
 
 # Initialize Weaviate client
