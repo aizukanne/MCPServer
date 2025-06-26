@@ -72,3 +72,6 @@ aws-deployment/layers/dependencies/python/
 
 # Artifacts directory (if used)
 artifacts/
+
+# Diagnostic scripts
+diagnose_issues.py

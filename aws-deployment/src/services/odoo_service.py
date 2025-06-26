@@ -101,6 +101,51 @@ class OdooService:
             return auth_result
         
         session_id = auth_result['session_id']
+        endpoint = f"{base_url}/api/mapped_models"
+        headers = {
+            'Content-Type': 'application/json',
+            'Cookie': f'session_id={session_id}'
+        }
+        params = {}
+        payload = {}
+        
+        if include_fields:
+            params['include_fields'] = include_fields
+        if model_name:
+            params['model_name'] = model_name
+        payload['params'] = params
+        
+        try:
+            logger.debug(f"Request payload: {json.dumps(payload)}")
+            response = requests.post(endpoint, headers=headers, json=payload)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError as http_err:
+            return {'error': f'HTTP error occurred: {http_err}'}
+        except Exception as err:
+            return {'error': f'Other error occurred: {err}'}
+    
+    async def fetch_records(
+        self, 
+        external_model: str, 
+        filters: Optional[List[List[Any]]] = None
+    ) -> Dict[str, Any]:
+        """
+        Retrieve records from an external model.
+        
+        Args:
+            external_model: External model name
+            filters: Optional Odoo domain filters
+            
+        Returns:
+            Response containing records
+        """
+        # Authenticate first
+        auth_result = self.authenticate()
+        if 'error' in auth_result:
+            return auth_result
+        
+        session_id = auth_result['session_id']
         endpoint = f"{base_url}/api/{external_model}"
         headers = {
             'Content-Type': 'application/json',
@@ -325,49 +370,4 @@ class OdooService:
         except requests.exceptions.HTTPError as http_err:
             return {'error': f'HTTP error occurred: {http_err}'}
         except Exception as err:
-            return {'error': f'Other error occurred: {err}'}return auth_result
-        
-        session_id = auth_result['session_id']
-        endpoint = f"{base_url}/api/mapped_models"
-        headers = {
-            'Content-Type': 'application/json',
-            'Cookie': f'session_id={session_id}'
-        }
-        params = {}
-        payload = {}
-        
-        if include_fields:
-            params['include_fields'] = include_fields
-        if model_name:
-            params['model_name'] = model_name
-        payload['params'] = params
-        
-        try:
-            logger.debug(f"Request payload: {json.dumps(payload)}")
-            response = requests.post(endpoint, headers=headers, json=payload)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.HTTPError as http_err:
-            return {'error': f'HTTP error occurred: {http_err}'}
-        except Exception as err:
             return {'error': f'Other error occurred: {err}'}
-    
-    async def fetch_records(
-        self, 
-        external_model: str, 
-        filters: Optional[List[List[Any]]] = None
-    ) -> Dict[str, Any]:
-        """
-        Retrieve records from an external model.
-        
-        Args:
-            external_model: External model name
-            filters: Optional Odoo domain filters
-            
-        Returns:
-            Response containing records
-        """
-        # Authenticate first
-        auth_result = self.authenticate()
-        if 'error' in auth_result:
-            
