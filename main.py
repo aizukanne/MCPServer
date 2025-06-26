@@ -324,11 +324,6 @@ class OfficeAssistantServer:
         """Run the MCP server."""
         logger.info("Starting Office Assistant MCP Server...")
         
-        # Add diagnostic logging
-        logger.info(f"stdin type: {type(sys.stdin)}")
-        logger.info(f"stdin.buffer type: {type(sys.stdin.buffer)}")
-        logger.info(f"stdin isatty: {sys.stdin.isatty()}")
-        
         # Initialize server options
         options = InitializationOptions(
             server_name="office-assistant",
@@ -338,40 +333,14 @@ class OfficeAssistantServer:
             }
         )
         
-        # Run the server with proper async streams
-        try:
-            logger.info("Attempting to run MCP server with async stdio...")
-            
-            # Import our async wrapper
-            from stdio_wrapper import AsyncStdioReader, AsyncStdioWriter
-            
-            # Create async wrappers
-            reader = AsyncStdioReader(sys.stdin.buffer)
-            writer = AsyncStdioWriter(sys.stdout.buffer)
-            
-            # Run server with async streams
-            async with reader as read_stream, writer as write_stream:
-                await self.server.run(
-                    read_stream=read_stream,
-                    write_stream=write_stream,
-                    initialization_options=options
-                )
-                
-        except ImportError:
-            logger.warning("Async wrapper not available, trying direct approach...")
-            # Fallback to direct streams
-            await self.server.run(
-                read_stream=sys.stdin.buffer,
-                write_stream=sys.stdout.buffer,
-                initialization_options=options
-            )
-        except Exception as e:
-            logger.error(f"Failed to run server: {type(e).__name__}: {e}")
-            logger.error(f"Error details: {str(e)}")
-            if "BufferedReader" in str(e) and "async" in str(e):
-                logger.error("The MCP library expects async-compatible streams.")
-                logger.error("Please ensure you're using MCP Inspector or another MCP client.")
-            raise
+        # The server.run() method expects anyio MemoryObjectStreams
+        # These should be provided by the MCP client (Inspector, Claude Desktop, etc.)
+        # We'll let the error propagate to show the actual issue
+        await self.server.run(
+            read_stream=sys.stdin.buffer,
+            write_stream=sys.stdout.buffer,
+            initialization_options=options
+        )
 
 
 async def main() -> None:
