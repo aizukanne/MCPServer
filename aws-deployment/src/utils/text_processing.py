@@ -128,6 +128,85 @@ def rank_sentences(text: str, stopwords: Set[str], max_sentences: int = 10) -> s
     Args:
         text: Input text to process
         stopwords: Set of stopwords to ignore
+        max_sentences: Maximum number of sentences to return
+        
+    Returns:
+        Summary text with top-ranked sentences
+    """
+    try:
+        # Calculate word frequencies
+        word_frequencies = {}
+        for word in word_tokenize(text.lower()):
+            if word.isalpha() and word not in stopwords:  # Consider only alphabetic words
+                word_frequencies[word] = word_frequencies.get(word, 0) + 1
+
+        # Score sentences based on word frequencies
+        sentence_scores = {}
+        sentences = sent_tokenize(text)
+        
+        for sent in sentences:
+            sentence_words = word_tokenize(sent.lower())
+            # Only consider sentences with reasonable length
+            if len(sent.split(' ')) < 30:
+                score = 0
+                for word in sentence_words:
+                    if word in word_frequencies:
+                        score += word_frequencies[word]
+                
+                if score > 0:  # Only include sentences with meaningful words
+                    sentence_scores[sent] = score
+
+        # Get top sentences
+        if not sentence_scores:
+            return text[:1000] + "..." if len(text) > 1000 else text
+        
+        sorted_sentences = sorted(sentence_scores.items(), key=lambda x: x[1], reverse=True)
+        summary_sentences = [sent for sent, score in sorted_sentences[:max_sentences]]
+        
+        # Add a full stop at the end of each sentence if it doesn't already end with one
+        summary = ' '.join([s if s.endswith(('.', '!', '?')) else f'{s}.' for s in summary_sentences])
+
+        return summary
+        
+    except Exception as e:
+        # Fallback to simple truncation
+        return text[:2000] + "..." if len(text) > 2000 else text
+
+
+def replace_problematic_chars(text: str) -> str:
+    """
+    Replace problematic characters for PDF generation.
+    
+    Args:
+        text: Input text
+        
+    Returns:
+        Text with replaced characters
+    """
+    replacements = {
+        '\u2018': "'",  # Left single quotation mark
+        '\u2019': "'",  # Right single quotation mark
+        '\u201C': '"',  # Left double quotation mark
+        '\u201D': '"',  # Right double quotation mark
+        '\u2013': '-',  # En dash
+        '\u2014': '--', # Em dash
+        '\u2026': '...', # Horizontal ellipsis
+        '\u00A0': ' ',  # Non-breaking space
+    }
+    
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    
+    return text
+
+
+def extract_keywords(text: str, stopwords: Set[str], max_keywords: int = 10) -> list:
+    """
+    Extract keywords from text based on frequency.
+    
+    Args:
+        text: Input text
+        stopwords: Set of stopwords to ignore
         max_keywords: Maximum number of keywords to return
         
     Returns:
@@ -337,82 +416,3 @@ def smart_truncate(text: str, max_length: int = 500, prefer_sentences: bool = Tr
     
     # Fallback to simple truncation
     return text[:max_length - 3] + "..."
-        max_sentences: Maximum number of sentences to return
-        
-    Returns:
-        Summary text with top-ranked sentences
-    """
-    try:
-        # Calculate word frequencies
-        word_frequencies = {}
-        for word in word_tokenize(text.lower()):
-            if word.isalpha() and word not in stopwords:  # Consider only alphabetic words
-                word_frequencies[word] = word_frequencies.get(word, 0) + 1
-
-        # Score sentences based on word frequencies
-        sentence_scores = {}
-        sentences = sent_tokenize(text)
-        
-        for sent in sentences:
-            sentence_words = word_tokenize(sent.lower())
-            # Only consider sentences with reasonable length
-            if len(sent.split(' ')) < 30:
-                score = 0
-                for word in sentence_words:
-                    if word in word_frequencies:
-                        score += word_frequencies[word]
-                
-                if score > 0:  # Only include sentences with meaningful words
-                    sentence_scores[sent] = score
-
-        # Get top sentences
-        if not sentence_scores:
-            return text[:1000] + "..." if len(text) > 1000 else text
-        
-        sorted_sentences = sorted(sentence_scores.items(), key=lambda x: x[1], reverse=True)
-        summary_sentences = [sent for sent, score in sorted_sentences[:max_sentences]]
-        
-        # Add a full stop at the end of each sentence if it doesn't already end with one
-        summary = ' '.join([s if s.endswith(('.', '!', '?')) else f'{s}.' for s in summary_sentences])
-
-        return summary
-        
-    except Exception as e:
-        # Fallback to simple truncation
-        return text[:2000] + "..." if len(text) > 2000 else text
-
-
-def replace_problematic_chars(text: str) -> str:
-    """
-    Replace problematic characters for PDF generation.
-    
-    Args:
-        text: Input text
-        
-    Returns:
-        Text with replaced characters
-    """
-    replacements = {
-        '\u2018': "'",  # Left single quotation mark
-        '\u2019': "'",  # Right single quotation mark
-        '\u201C': '"',  # Left double quotation mark
-        '\u201D': '"',  # Right double quotation mark
-        '\u2013': '-',  # En dash
-        '\u2014': '--', # Em dash
-        '\u2026': '...', # Horizontal ellipsis
-        '\u00A0': ' ',  # Non-breaking space
-    }
-    
-    for old, new in replacements.items():
-        text = text.replace(old, new)
-    
-    return text
-
-
-def extract_keywords(text: str, stopwords: Set[str], max_keywords: int = 10) -> list:
-    """
-    Extract keywords from text based on frequency.
-    
-    Args:
-        text: Input text
-        stopwords: Set of stopwords to ignore
