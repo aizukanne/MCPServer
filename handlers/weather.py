@@ -9,7 +9,7 @@ import logging
 from typing import Any, Dict, Optional, Tuple
 
 from services.weather_service import WeatherService
-from utils.formatting import format_weather_response, format_error_response
+from utils.formatting import format_weather_response, format_error_response, format_success_response
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class WeatherHandler:
                 }
             }
             
-            return format_weather_response(response)
+            return format_success_response(response)
             
         except Exception as e:
             logger.error(f"Error getting coordinates: {e}")
