@@ -52,10 +52,24 @@ class OfficeAssistantServer:
     
     def __init__(self):
         """Initialize the server with all handlers."""
-        self.server = Server("office-assistant")
-        self.handlers = self._initialize_handlers()
-        self.tool_schemas = get_all_tool_schemas()
-        self._setup_handlers()
+        try:
+            logger.info("Initializing MCP Server...")
+            self.server = Server("office-assistant")
+            logger.info("Server instance created")
+            
+            self.handlers = self._initialize_handlers()
+            logger.info(f"Initialized {len(self.handlers)} handlers")
+            
+            self.tool_schemas = get_all_tool_schemas()
+            logger.info(f"Loaded {len(self.tool_schemas)} tool schemas")
+            
+            self._setup_handlers()
+            logger.info("Handler setup complete")
+        except Exception as e:
+            logger.error(f"Error during server initialization: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
+            raise
     
     def _initialize_handlers(self) -> Dict[str, Any]:
         """Initialize all function handlers."""
@@ -334,8 +348,18 @@ async def main() -> None:
         await server.run()
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
+    except ExceptionGroup as eg:
+        logger.error(f"Server error: {eg}")
+        # Log each sub-exception
+        for i, e in enumerate(eg.exceptions):
+            logger.error(f"Sub-exception {i+1}: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
+        sys.exit(1)
     except Exception as e:
-        logger.error(f"Server error: {e}")
+        logger.error(f"Server error: {type(e).__name__}: {e}")
+        import traceback
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
         sys.exit(1)
     finally:
         # Clean up Weaviate connection
