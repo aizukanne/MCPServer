@@ -118,7 +118,12 @@ EOF
 
     # Install dependencies to layer
     cd layers/dependencies
-    pip install -r requirements.txt -t python/
+    # Check if uv is installed, if not use pip
+    if command -v uv &> /dev/null; then
+        uv pip install -r requirements.txt --target python/
+    else
+        pip install -r requirements.txt -t python/
+    fi
     
     # Remove unnecessary files to reduce size
     find python/ -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

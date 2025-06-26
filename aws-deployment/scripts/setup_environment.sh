@@ -19,7 +19,8 @@ fi
 
 if ! command -v sam >/dev/null 2>&1; then
     echo -e "${RED}❌ SAM CLI not found. Please install SAM CLI first.${NC}"
-    echo "   Install: pip install aws-sam-cli"
+    echo "   Install: uv pip install aws-sam-cli"
+    echo "   (First install uv: curl -LsSf https://astral.sh/uv/install.sh | sh)"
     exit 1
 fi
 
@@ -40,7 +41,15 @@ echo -e "${GREEN}✅ All prerequisites check passed!${NC}"
 
 # Install Python dependencies
 echo "Installing additional Python dependencies..."
-pip install boto3 requests aiohttp beautifulsoup4
+# Check if uv is installed
+if command -v uv &> /dev/null; then
+    uv pip install boto3 requests aiohttp beautifulsoup4
+else
+    echo "Installing uv for faster package management..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    source $HOME/.cargo/env
+    uv pip install boto3 requests aiohttp beautifulsoup4
+fi
 
 echo -e "${GREEN}✅ Environment setup complete!${NC}"
 echo ""

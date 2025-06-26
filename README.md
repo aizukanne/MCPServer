@@ -50,7 +50,13 @@ A Model Context Protocol (MCP) server that exposes office assistant functions to
 
 2. **Install dependencies:**
    ```bash
-   pip install -r requirements.txt
+   # First, install uv if you haven't already
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Create virtual environment and install dependencies
+   uv venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   uv pip install -r requirements.txt
    ```
 
 3. **Set up environment variables:**

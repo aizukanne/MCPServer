@@ -315,7 +315,14 @@ aws sts get-caller-identity >/dev/null 2>&1 || { echo "AWS credentials not confi
 
 # Install Python dependencies
 echo "Installing Python dependencies..."
-pip install aws-sam-cli boto3 requests
+# Install uv if not already installed
+if ! command -v uv &> /dev/null; then
+    echo "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
+
+# Install dependencies using uv
+uv pip install aws-sam-cli boto3 requests
 
 echo "Environment setup complete!"
 echo "Next steps:"

@@ -12,7 +12,7 @@ ModuleNotFoundError: No module named 'handlers'
 **Solution:**
 1. Ensure all `__init__.py` files exist
 2. Check Python path: `export PYTHONPATH="${PYTHONPATH}:."`
-3. Install missing dependencies: `pip install -r requirements.txt`
+3. Install missing dependencies: `uv pip install -r requirements.txt`
 
 #### Config Module Not Found
 ```bash
@@ -32,7 +32,7 @@ BUILD FAILED - Missing dependencies
 ```
 
 **Solution:**
-1. Install SAM CLI: `pip install aws-sam-cli`
+1. Install SAM CLI: `uv pip install aws-sam-cli`
 2. Install Docker for containerized builds
 3. Check Python version compatibility (3.9+)
 

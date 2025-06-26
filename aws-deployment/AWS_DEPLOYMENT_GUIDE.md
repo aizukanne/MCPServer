@@ -12,8 +12,11 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip
 unzip awscliv2.zip
 sudo ./aws/install
 
-# SAM CLI  
-pip install aws-sam-cli
+# SAM CLI
+# Install uv first if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# Then install SAM CLI
+uv pip install aws-sam-cli
 
 # Configure AWS credentials
 aws configure
@@ -149,7 +152,7 @@ If you prefer manual deployment:
 ```bash
 # Create Lambda layer
 mkdir -p layers/dependencies/python
-pip install -r requirements.txt -t layers/dependencies/python/
+uv pip install -r requirements.txt --target layers/dependencies/python/
 
 # Remove unnecessary files
 find layers/dependencies/python/ -name "*.pyc" -delete
@@ -410,7 +413,10 @@ jobs:
           python-version: 3.9
       
       - name: Install SAM CLI
-        run: pip install aws-sam-cli
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          source $HOME/.cargo/env
+          uv pip install aws-sam-cli
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1

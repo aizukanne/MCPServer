@@ -5,8 +5,43 @@ This guide will walk you through setting up the complete MCP Office Assistant se
 ## Prerequisites
 
 - Python 3.8 or higher
+- uv (fast Python package installer and resolver)
 - Your existing `config.py` and `url_shortener.py` files
 - Access to AWS, Slack, OpenAI, and other external services
+
+### Installing uv
+
+uv is a fast Python package installer and resolver written in Rust. It's a drop-in replacement for pip with significant performance improvements.
+
+**On macOS and Linux:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**On Windows:**
+```powershell
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+**Alternative installation methods:**
+```bash
+# Using pip (if you have it)
+pip install uv
+
+# Using pipx
+pipx install uv
+
+# Using Homebrew (macOS)
+brew install uv
+
+# Using conda
+conda install -c conda-forge uv
+```
+
+After installation, verify uv is working:
+```bash
+uv --version
+```
 
 ## Step 1: Project Structure Setup
 
@@ -65,28 +100,30 @@ touch utils/__init__.py
 ## Step 3: Install Dependencies
 
 ```bash
-# Create virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Create virtual environment using uv (recommended)
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies using uv
+uv pip install -r requirements.txt
 
 # If you encounter issues, install individually:
-pip install mcp>=0.9.0
-pip install boto3>=1.26.0
-pip install requests>=2.28.0
-pip install aiohttp>=3.8.0
-pip install beautifulsoup4>=4.11.0
-pip install weaviate-client>=3.15.0
-pip install openai>=1.0.0
-pip install fpdf>=2.5.0
-pip install markdown2>=2.4.0
-pip install pydantic>=2.0.0
-pip install nltk>=3.8.0
-pip install lxml>=4.9.0
-pip install python-dotenv>=1.0.0
+uv pip install mcp>=0.9.0
+uv pip install boto3>=1.26.0
+uv pip install requests>=2.28.0
+uv pip install aiohttp>=3.8.0
+uv pip install beautifulsoup4>=4.11.0
+uv pip install weaviate-client>=3.15.0
+uv pip install openai>=1.0.0
+uv pip install fpdf>=2.5.0
+uv pip install markdown2>=2.4.0
+uv pip install pydantic>=2.0.0
+uv pip install nltk>=3.8.0
+uv pip install lxml>=4.9.0
+uv pip install python-dotenv>=1.0.0
 ```
+
+**Note:** uv creates virtual environments in `.venv` by default and is significantly faster than pip for dependency resolution and installation.
 
 ## Step 4: Environment Configuration
 
@@ -240,7 +277,7 @@ Configure your AI application (Claude Desktop, etc.) to connect to the MCP serve
 
 1. **Import Errors**: Make sure all `__init__.py` files are created and your Python path is correct
 
-2. **Missing Dependencies**: Install missing packages with pip
+2. **Missing Dependencies**: Install missing packages with uv pip install
 
 3. **Configuration Errors**: Verify all environment variables are set correctly
 
