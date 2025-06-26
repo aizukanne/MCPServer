@@ -319,8 +319,12 @@ class OfficeAssistantServer:
             }
         )
         
-        # Run the server directly without context manager
-        await self.server.run()
+        # Run the server with stdio streams
+        await self.server.run(
+            read_stream=sys.stdin.buffer,
+            write_stream=sys.stdout.buffer,
+            initialization_options=options
+        )
 
 
 async def main() -> None:
