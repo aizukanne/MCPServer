@@ -328,7 +328,6 @@ class OfficeAssistantServer:
         logger.info(f"stdin type: {type(sys.stdin)}")
         logger.info(f"stdin.buffer type: {type(sys.stdin.buffer)}")
         logger.info(f"stdin isatty: {sys.stdin.isatty()}")
-        logger.info(f"stdin readable: {hasattr(sys.stdin.buffer, 'readable') and sys.stdin.buffer.readable()}")
         
         # Initialize server options
         options = InitializationOptions(
@@ -339,9 +338,28 @@ class OfficeAssistantServer:
             }
         )
         
-        # Run the server with stdio streams
+        # Run the server with proper async streams
         try:
-            logger.info("Attempting to run MCP server with stdio streams...")
+            logger.info("Attempting to run MCP server with async stdio...")
+            
+            # Import our async wrapper
+            from stdio_wrapper import AsyncStdioReader, AsyncStdioWriter
+            
+            # Create async wrappers
+            reader = AsyncStdioReader(sys.stdin.buffer)
+            writer = AsyncStdioWriter(sys.stdout.buffer)
+            
+            # Run server with async streams
+            async with reader as read_stream, writer as write_stream:
+                await self.server.run(
+                    read_stream=read_stream,
+                    write_stream=write_stream,
+                    initialization_options=options
+                )
+                
+        except ImportError:
+            logger.warning("Async wrapper not available, trying direct approach...")
+            # Fallback to direct streams
             await self.server.run(
                 read_stream=sys.stdin.buffer,
                 write_stream=sys.stdout.buffer,
@@ -349,7 +367,10 @@ class OfficeAssistantServer:
             )
         except Exception as e:
             logger.error(f"Failed to run server: {type(e).__name__}: {e}")
-            logger.error(f"This typically means the server is being run directly instead of through an MCP client")
+            logger.error(f"Error details: {str(e)}")
+            if "BufferedReader" in str(e) and "async" in str(e):
+                logger.error("The MCP library expects async-compatible streams.")
+                logger.error("Please ensure you're using MCP Inspector or another MCP client.")
             raise
 
 
