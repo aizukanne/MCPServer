@@ -66,12 +66,12 @@ class UtilitiesService:
             logger.error(f"Math execution error: {e}")
             return {"status": "error", "message": str(e)}
     
-    async def ask_openai_o1(self, prompt: str) -> Optional[str]:
+    async def ask_openai_reasoning(self, prompt: str) -> Optional[str]:
         """
-        Query OpenAI O1 model for advanced reasoning.
+        Query OpenAI's latest deep reasoning model.
         
         Args:
-            prompt: Prompt to send to OpenAI O1 model
+            prompt: Prompt to send to OpenAI's reasoning model
             
         Returns:
             AI response or None if failed
@@ -79,7 +79,7 @@ class UtilitiesService:
         if not client:
             raise ValueError("OpenAI client not configured")
         
-        logger.info('Sending prompt to OpenAI O1 model')
+        logger.info('Sending prompt to OpenAI reasoning model')
         
         message = [
             {
@@ -95,7 +95,7 @@ class UtilitiesService:
                 messages=message
             )
             
-            logger.info('Received response from OpenAI O1')
+            logger.info('Received response from OpenAI reasoning model')
             
             # Extract the actual message content
             response_message_content = response.choices[0].message.content

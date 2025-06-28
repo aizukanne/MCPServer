@@ -585,9 +585,9 @@ def get_utility_schemas() -> Dict[str, Dict[str, Any]]:
                 "additionalProperties": True
             }
         },
-        "ask_openai_o1": {
-            "name": "ask_openai_o1",
-            "description": "Query OpenAI O1 model for advanced reasoning",
+        "ask_openai_reasoning": {
+            "name": "ask_openai_reasoning",
+            "description": "Query OpenAI's latest deep reasoning model",
             "inputSchema": {
                 "type": "object",
                 "properties": {

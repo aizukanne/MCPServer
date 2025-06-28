@@ -312,8 +312,8 @@ class OfficeAssistantServer:
                 code=arguments["code"],
                 **{k: v for k, v in arguments.items() if k != "code"}
             )
-        elif tool_name == "ask_openai_o1":
-            return await self.handlers["utilities"].ask_openai_o1(
+        elif tool_name == "ask_openai_reasoning":
+            return await self.handlers["utilities"].ask_openai_reasoning(
                 prompt=arguments["prompt"]
             )
         

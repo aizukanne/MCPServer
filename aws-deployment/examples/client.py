@@ -106,8 +106,8 @@ class MCPClient:
         return self.execute_tool("solve_maths", code=code, **params)
     
     def ask_openai(self, prompt: str) -> Dict[str, Any]:
-        """Query OpenAI O1 model."""
-        return self.execute_tool("ask_openai_o1", prompt=prompt)
+        """Query OpenAI's latest deep reasoning model."""
+        return self.execute_tool("ask_openai_reasoning", prompt=prompt)
     
     def get_users(self, user_id: Optional[str] = None) -> Dict[str, Any]:
         """Get user information."""

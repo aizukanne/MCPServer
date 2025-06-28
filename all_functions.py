@@ -1205,8 +1205,8 @@ def odoo_post_record(external_model, record_id):
 
 
 # Conversation functions
-def ask_openai_o1(prompt):
-    print(f'OpenAI o1 Prompt: {prompt}')
+def ask_openai_reasoning(prompt):
+    print(f'OpenAI reasoning Prompt: {prompt}')
     message = [
         {
             "role": "user",

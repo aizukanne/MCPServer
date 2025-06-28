@@ -65,12 +65,12 @@ class UtilitiesHandler:
             logger.error(f"Error executing math code: {e}")
             return format_error_response(f"Failed to execute code: {str(e)}")
     
-    async def ask_openai_o1(self, prompt: str) -> str:
+    async def ask_openai_reasoning(self, prompt: str) -> str:
         """
-        Query OpenAI O1 model for advanced reasoning.
+        Query OpenAI's latest deep reasoning model.
         
         Args:
-            prompt: Prompt to send to OpenAI O1 model
+            prompt: Prompt to send to OpenAI's reasoning model
             
         Returns:
             Formatted AI response as JSON string
@@ -89,7 +89,7 @@ class UtilitiesHandler:
                 return format_error_response("Prompt is too long. Please reduce the length.")
             
             # Query OpenAI
-            result = await self.utilities_service.ask_openai_o1(prompt)
+            result = await self.utilities_service.ask_openai_reasoning(prompt)
             
             # Format and return result
             return format_openai_response(result)

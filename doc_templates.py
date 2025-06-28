@@ -161,8 +161,8 @@ Generate text embeddings.
 #### solve_maths
 Execute mathematical calculations.
 
-#### ask_openai_o1
-Query OpenAI O1 model.
+#### ask_openai_reasoning
+Query OpenAI's latest deep reasoning model.
 
 ## Response Format
 

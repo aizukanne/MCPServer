@@ -403,8 +403,8 @@ def route_and_execute_tool(tool_name: str, arguments: Dict[str, Any]) -> Any:
             **{k: v for k, v in arguments.items() 
                if k not in ["code", "_project_id", "_lambda_context"]}
         )
-    elif tool_name == "ask_openai_o1":
-        return handlers['utilities'].ask_openai_o1(
+    elif tool_name == "ask_openai_reasoning":
+        return handlers['utilities'].ask_openai_reasoning(
             prompt=arguments["prompt"]
         )
     
