@@ -260,8 +260,8 @@ class WebService:
                             }
                         })
                         
-                elif isinstance(result, str) and 'Timeout error' not in result and 'error' not in result.lower():
-                    # Process HTML content
+                elif isinstance(result, str) and not result.startswith(('Timeout error:', 'Error:')):
+                    # Process HTML content - treat as valid HTML unless it's a specific error message
                     from bs4 import BeautifulSoup
                     
                     soup = BeautifulSoup(result, 'lxml')
